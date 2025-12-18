@@ -7,7 +7,7 @@ import jakarta.persistence.Id;
 import jakarta.persistence.Column;
 
 @Entity
-public class UserEntity {
+public class UserModel {
 
 @Id
 @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -20,10 +20,10 @@ private String password;
 
 private String role;
 
-public UserEntity() {
+public UserModel() {
 }
 
-public UserEntity(Long id, String email, String password, String role) {
+public UserModel(Long id, String email, String password, String role) {
 this.id = id;
 this.email = email;
 this.password = password;
