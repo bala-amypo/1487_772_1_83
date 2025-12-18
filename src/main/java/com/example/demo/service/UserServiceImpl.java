@@ -3,7 +3,7 @@ package com.example.demo.service;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
-import com.example.demo.entity.UserEntity;
+import com.example.demo.entity.UserModel;
 import com.example.demo.repository.UserRepository;
 
 @Service
@@ -13,7 +13,7 @@ public class UserServiceImpl implements UserService {
 UserRepository userRepository;
 
 @Override
-public UserEntity register(String email, String password, String role) {
+public UserModel register(String email, String password, String role) {
 
 // email must be unique
 if (userRepository.findByEmail(email) != null) {
@@ -25,7 +25,7 @@ if (role == null || role.isEmpty()) {
 throw new RuntimeException("Role is required");
 }
 
-UserEntity user = new UserEntity();
+UserModel user = new UserModel();
 user.setEmail(email);
 user.setPassword(password);
 user.setRole(role);
@@ -34,8 +34,8 @@ return userRepository.save(user);
 }
 
 @Override
-public UserEntity login(String email, String password) {
-UserEntity user = userRepository.findByEmail(email);
+public UserModel login(String email, String password) {
+UserModel user = userRepository.findByEmail(email);
 
 if (user == null || !user.getPassword().equals(password)) {
 throw new RuntimeException("Invalid email or password");
