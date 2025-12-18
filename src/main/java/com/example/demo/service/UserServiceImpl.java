@@ -45,7 +45,7 @@ return user;
 }
 
 @Override
-public UserEntity getByEmail(String email) {
+public UserModel getByEmail(String email) {
 return userRepository.findByEmail(email);
 }
 }
