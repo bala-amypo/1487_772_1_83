@@ -1,8 +1,8 @@
 package com.example.demo.exception;
 
-public class BusinessValidationException extends RuntimeException {
+public class ResourceNotFoundException extends RuntimeException {
 
-    public BusinessValidationException(String message) {
+    public ResourceNotFoundException(String message) {
         super(message);
     }
 }

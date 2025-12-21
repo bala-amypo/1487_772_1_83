@@ -1,8 +1,8 @@
 package com.example.demo.exception;
 
-public class BusinessValidationException extends RuntimeException {
+public class DuplicateResourceException extends RuntimeException {
 
-    public BusinessValidationException(String message) {
+    public DuplicateResourceException(String message) {
         super(message);
     }
 }
