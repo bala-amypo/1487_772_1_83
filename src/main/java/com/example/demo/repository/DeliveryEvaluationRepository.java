@@ -1,18 +1,60 @@
-package com.example.demo.repository;
+package com.example.demo.model;
 
-import com.example.demo.model.*;
-import org.springframework.data.jpa.repository.*;
-import java.util.List;
+import jakarta.persistence.*;
+import java.time.LocalDate;
 
-public interface DeliveryEvaluationRepository extends JpaRepository<DeliveryEvaluation, Long> {
+@Entity
+public class DeliveryEvaluation {
 
-    List<DeliveryEvaluation> findByVendorId(Long vendorId);
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long id;
 
-    List<DeliveryEvaluation> findBySlaRequirementId(Long slaId);
+    @ManyToOne
+    private Vendor vendor;
 
-    @Query("SELECT d FROM DeliveryEvaluation d WHERE d.vendor = :vendor AND d.qualityScore >= :minScore")
-    List<DeliveryEvaluation> findHighQualityDeliveries(Vendor vendor, Double minScore);
+    @ManyToOne
+    private SLARequirement slaRequirement;
 
-    @Query("SELECT d FROM DeliveryEvaluation d WHERE d.slaRequirement = :sla AND d.meetsDeliveryTarget = true")
-    List<DeliveryEvaluation> findOnTimeDeliveries(SLARequirement sla);
+    private Integer actualDeliveryDays;
+    private Double qualityScore;
+    private LocalDate evaluationDate;
+
+    private Boolean meetsDeliveryTarget;
+    private Boolean meetsQualityTarget;
+
+    public DeliveryEvaluation() {}
+
+    public DeliveryEvaluation(Vendor v, SLARequirement s, Integer days, Double score, LocalDate date) {
+        this.vendor = v;
+        this.slaRequirement = s;
+        this.actualDeliveryDays = days;
+        this.qualityScore = score;
+        this.evaluationDate = date;
+    }
+
+    // getters & setters
+    public Long getId() { return id; }
+    public void setId(Long id) { this.id = id; }
+
+    public Vendor getVendor() { return vendor; }
+    public void setVendor(Vendor vendor) { this.vendor = vendor; }
+
+    public SLARequirement getSlaRequirement() { return slaRequirement; }
+    public void setSlaRequirement(SLARequirement slaRequirement) { this.slaRequirement = slaRequirement; }
+
+    public Integer getActualDeliveryDays() { return actualDeliveryDays; }
+    public void setActualDeliveryDays(Integer actualDeliveryDays) { this.actualDeliveryDays = actualDeliveryDays; }
+
+    public Double getQualityScore() { return qualityScore; }
+    public void setQualityScore(Double qualityScore) { this.qualityScore = qualityScore; }
+
+    public LocalDate getEvaluationDate() { return evaluationDate; }
+    public void setEvaluationDate(LocalDate evaluationDate) { this.evaluationDate = evaluationDate; }
+
+    public Boolean getMeetsDeliveryTarget() { return meetsDeliveryTarget; }
+    public void setMeetsDeliveryTarget(Boolean meetsDeliveryTarget) { this.meetsDeliveryTarget = meetsDeliveryTarget; }
+
+    public Boolean getMeetsQualityTarget() { return meetsQualityTarget; }
+    public void setMeetsQualityTarget(Boolean meetsQualityTarget) { this.meetsQualityTarget = meetsQualityTarget; }
 }
