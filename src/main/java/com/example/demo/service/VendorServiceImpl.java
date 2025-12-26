@@ -1,73 +1,72 @@
 package com.example.demo.service.impl;
 
-import com.example.demo.model.DeliveryEvaluation;
 import com.example.demo.model.Vendor;
-import com.example.demo.model.SLARequirement;
-import com.example.demo.repository.DeliveryEvaluationRepository;
 import com.example.demo.repository.VendorRepository;
-import com.example.demo.repository.SLARequirementRepository;
-import com.example.demo.service.DeliveryEvaluationService;
+import com.example.demo.service.VendorService;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import java.util.List;
+import java.util.Optional;
 
 @Service
 @Transactional
-public class DeliveryEvaluationServiceImpl implements DeliveryEvaluationService {
+public class VendorServiceImpl implements VendorService {
     
-    private final DeliveryEvaluationRepository deliveryEvaluationRepository;
     private final VendorRepository vendorRepository;
-    private final SLARequirementRepository slaRequirementRepository;
     
-    public DeliveryEvaluationServiceImpl(DeliveryEvaluationRepository deliveryEvaluationRepository,
-                                        VendorRepository vendorRepository,
-                                        SLARequirementRepository slaRequirementRepository) {
-        this.deliveryEvaluationRepository = deliveryEvaluationRepository;
+    public VendorServiceImpl(VendorRepository vendorRepository) {
         this.vendorRepository = vendorRepository;
-        this.slaRequirementRepository = slaRequirementRepository;
     }
     
     @Override
-    public DeliveryEvaluation createEvaluation(DeliveryEvaluation evaluation) {
-        Vendor vendor = vendorRepository.findById(evaluation.getVendor().getId())
-            .orElseThrow(() -> new IllegalArgumentException("Vendor not found"));
-        
-        SLARequirement slaRequirement = slaRequirementRepository.findById(evaluation.getSlaRequirement().getId())
-            .orElseThrow(() -> new IllegalArgumentException("SLA Requirement not found"));
-        
-        if (!vendor.getActive()) {
-            throw new IllegalStateException("Cannot create evaluation for inactive vendor");
+    public Vendor createVendor(Vendor vendor) {
+        if (vendorRepository.existsByName(vendor.getName())) {
+            throw new IllegalArgumentException("Vendor name must be unique: " + vendor.getName());
         }
-        
-        if (evaluation.getActualDeliveryDays() < 0) {
-            throw new IllegalArgumentException("Actual delivery days must be >= 0");
-        }
-        
-        if (evaluation.getQualityScore() < 0 || evaluation.getQualityScore() > 100) {
-            throw new IllegalArgumentException("Quality score must be between 0 and 100");
-        }
-        
-        evaluation.setVendor(vendor);
-        evaluation.setSlaRequirement(slaRequirement);
-        
-        // Calculate whether targets are met
-        evaluation.setMeetsDeliveryTarget(
-            evaluation.getActualDeliveryDays() <= slaRequirement.getMaxDeliveryDays());
-        evaluation.setMeetsQualityTarget(
-            evaluation.getQualityScore() >= slaRequirement.getQualityTargetScore());
-        
-        return deliveryEvaluationRepository.save(evaluation);
+        vendor.setActive(true);
+        return vendorRepository.save(vendor);
     }
     
     @Override
     @Transactional(readOnly = true)
-    public List<DeliveryEvaluation> getEvaluationsForVendor(Long vendorId) {
-        return deliveryEvaluationRepository.findByVendorId(vendorId);
+    public Vendor getVendorById(Long id) {
+        Optional<Vendor> vendor = vendorRepository.findById(id);
+        return vendor.orElseThrow(() -> 
+            new IllegalArgumentException("Vendor not found with id: " + id));
     }
     
     @Override
     @Transactional(readOnly = true)
-    public List<DeliveryEvaluation> getEvaluationsForRequirement(Long requirementId) {
-        return deliveryEvaluationRepository.findBySlaRequirementId(requirementId);
+    public List<Vendor> getAllVendors() {
+        return vendorRepository.findAll();
+    }
+    
+    @Override
+    public Vendor updateVendor(Long id, Vendor vendorUpdates) {
+        Vendor vendor = getVendorById(id);
+        
+        if (vendorUpdates.getName() != null && !vendorUpdates.getName().equals(vendor.getName())) {
+            if (vendorRepository.existsByName(vendorUpdates.getName())) {
+                throw new IllegalArgumentException("Vendor name must be unique: " + vendorUpdates.getName());
+            }
+            vendor.setName(vendorUpdates.getName());
+        }
+        
+        if (vendorUpdates.getContactEmail() != null) {
+            vendor.setContactEmail(vendorUpdates.getContactEmail());
+        }
+        
+        if (vendorUpdates.getContactPhone() != null) {
+            vendor.setContactPhone(vendorUpdates.getContactPhone());
+        }
+        
+        return vendorRepository.save(vendor);
+    }
+    
+    @Override
+    public void deactivateVendor(Long id) {
+        Vendor vendor = getVendorById(id);
+        vendor.setActive(false);
+        vendorRepository.save(vendor);
     }
 }

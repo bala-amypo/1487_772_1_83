@@ -1,8 +1,8 @@
 package com.example.demo.service.impl;
 
-import com.example.demo.model.Vendor;
-import com.example.demo.repository.VendorRepository;
-import com.example.demo.service.VendorService;
+import com.example.demo.model.VendorTier;
+import com.example.demo.repository.VendorTierRepository;
+import com.example.demo.service.VendorTierService;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import java.util.List;
@@ -10,63 +10,72 @@ import java.util.Optional;
 
 @Service
 @Transactional
-public class VendorServiceImpl implements VendorService {
+public class VendorTierServiceImpl implements VendorTierService {
     
-    private final VendorRepository vendorRepository;
+    private final VendorTierRepository vendorTierRepository;
     
-    public VendorServiceImpl(VendorRepository vendorRepository) {
-        this.vendorRepository = vendorRepository;
+    public VendorTierServiceImpl(VendorTierRepository vendorTierRepository) {
+        this.vendorTierRepository = vendorTierRepository;
     }
     
     @Override
-    public Vendor createVendor(Vendor vendor) {
-        if (vendorRepository.existsByName(vendor.getName())) {
-            throw new IllegalArgumentException("Vendor name must be unique: " + vendor.getName());
+    public VendorTier createTier(VendorTier tier) {
+        if (tier.getMinScoreThreshold() < 0 || tier.getMinScoreThreshold() > 100) {
+            throw new IllegalArgumentException("Min score threshold must be between 0–100");
         }
-        vendor.setActive(true);
-        return vendorRepository.save(vendor);
-    }
-    
-    @Override
-    @Transactional(readOnly = true)
-    public Vendor getVendorById(Long id) {
-        Optional<Vendor> vendor = vendorRepository.findById(id);
-        return vendor.orElseThrow(() -> 
-            new IllegalArgumentException("Vendor not found with id: " + id));
-    }
-    
-    @Override
-    @Transactional(readOnly = true)
-    public List<Vendor> getAllVendors() {
-        return vendorRepository.findAll();
-    }
-    
-    @Override
-    public Vendor updateVendor(Long id, Vendor vendorUpdates) {
-        Vendor vendor = getVendorById(id);
+        if (vendorTierRepository.existsByTierName(tier.getTierName())) {
+            throw new IllegalArgumentException("Tier name must be unique: " + tier.getTierName());
+        }
         
-        if (vendorUpdates.getName() != null && !vendorUpdates.getName().equals(vendor.getName())) {
-            if (vendorRepository.existsByName(vendorUpdates.getName())) {
-                throw new IllegalArgumentException("Vendor name must be unique: " + vendorUpdates.getName());
+        tier.setActive(true);
+        return vendorTierRepository.save(tier);
+    }
+    
+    @Override
+    @Transactional(readOnly = true)
+    public List<VendorTier> getAllTiers() {
+        return vendorTierRepository.findAll();
+    }
+    
+    @Override
+    @Transactional(readOnly = true)
+    public VendorTier getTierById(Long id) {
+        Optional<VendorTier> tier = vendorTierRepository.findById(id);
+        return tier.orElseThrow(() -> 
+            new IllegalArgumentException("Vendor Tier not found with id: " + id));
+    }
+    
+    @Override
+    public VendorTier updateTier(Long id, VendorTier tierUpdates) {
+        VendorTier tier = getTierById(id);
+        
+        if (tierUpdates.getTierName() != null && 
+            !tierUpdates.getTierName().equals(tier.getTierName())) {
+            if (vendorTierRepository.existsByTierName(tierUpdates.getTierName())) {
+                throw new IllegalArgumentException("Tier name must be unique: " + tierUpdates.getTierName());
             }
-            vendor.setName(vendorUpdates.getName());
+            tier.setTierName(tierUpdates.getTierName());
         }
         
-        if (vendorUpdates.getContactEmail() != null) {
-            vendor.setContactEmail(vendorUpdates.getContactEmail());
+        if (tierUpdates.getDescription() != null) {
+            tier.setDescription(tierUpdates.getDescription());
         }
         
-        if (vendorUpdates.getContactPhone() != null) {
-            vendor.setContactPhone(vendorUpdates.getContactPhone());
+        if (tierUpdates.getMinScoreThreshold() != null) {
+            if (tierUpdates.getMinScoreThreshold() < 0 || 
+                tierUpdates.getMinScoreThreshold() > 100) {
+                throw new IllegalArgumentException("Min score threshold must be between 0–100");
+            }
+            tier.setMinScoreThreshold(tierUpdates.getMinScoreThreshold());
         }
         
-        return vendorRepository.save(vendor);
+        return vendorTierRepository.save(tier);
     }
     
     @Override
-    public void deactivateVendor(Long id) {
-        Vendor vendor = getVendorById(id);
-        vendor.setActive(false);
-        vendorRepository.save(vendor);
+    public void deactivateTier(Long id) {
+        VendorTier tier = getTierById(id);
+        tier.setActive(false);
+        vendorTierRepository.save(tier);
     }
 }
