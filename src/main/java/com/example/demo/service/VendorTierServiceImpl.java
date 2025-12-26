@@ -1,61 +1,62 @@
-package com.example.demo.service;
+package com.example.demo.service.impl;
 
-import java.util.List;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Service;
 import com.example.demo.model.VendorTier;
 import com.example.demo.repository.VendorTierRepository;
+import com.example.demo.service.VendorTierService;
 
-@Service
+import java.util.List;
+
 public class VendorTierServiceImpl implements VendorTierService {
 
-@Autowired
-VendorTierRepository vendorTierRepository;
+    private final VendorTierRepository tierRepository;
 
-@Override
-public VendorTier createTier(VendorTier tier) {
-validateThreshold(tier.getMinScoreThreshold());
-tier.setActive(true);
-return vendorTierRepository.save(tier);
-}
+    public VendorTierServiceImpl(VendorTierRepository tierRepository) {
+        this.tierRepository = tierRepository;
+    }
 
-@Override
-public VendorTier updateTier(Long id, VendorTier tier) {
-VendorTier existingTier = vendorTierRepository.findById(id).orElse(null);
+    @Override
+    public VendorTier createTier(VendorTier tier) {
 
-if (existingTier != null) {
-validateThreshold(tier.getMinScoreThreshold());
-existingTier.setTierName(tier.getTierName());
-existingTier.setMinScoreThreshold(tier.getMinScoreThreshold());
-existingTier.setDescription(tier.getDescription());
-return vendorTierRepository.save(existingTier);
-}
-return null;
-}
+        if (tier.getMinScoreThreshold() < 0 || tier.getMinScoreThreshold() > 100) {
+            throw new IllegalArgumentException("minScoreThreshold must be between 0–100");
+        }
 
-@Override
-public VendorTier getTierById(Long id) {
-return vendorTierRepository.findById(id).orElse(null);
-}
+        if (tierRepository.existsByTierName(tier.getTierName())) {
+            throw new IllegalArgumentException("Tier name must be unique");
+        }
 
-@Override
-public List<VendorTier> getAllTiers() {
-return vendorTierRepository.findAll();
-}
+        tier.setActive(true);
+        return tierRepository.save(tier);
+    }
 
-@Override
-public VendorTier deactivateTier(Long id) {
-VendorTier tier = vendorTierRepository.findById(id).orElse(null);
-if (tier != null) {
-tier.setActive(false);
-return vendorTierRepository.save(tier);
-}
-return null;
-}
+    @Override
+    public VendorTier updateTier(Long id, VendorTier tier) {
 
-private void validateThreshold(Double threshold) {
-if (threshold == null || threshold < 0 || threshold > 100) {
-throw new IllegalArgumentException("Min Score Threshold must be between 0 and 100");
-}
-}
+        VendorTier existing = tierRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Tier not found"));
+
+        existing.setTierName(tier.getTierName());
+        existing.setDescription(tier.getDescription());
+        existing.setMinScoreThreshold(tier.getMinScoreThreshold());
+
+        return tierRepository.save(existing);
+    }
+
+    @Override
+    public VendorTier getTierById(Long id) {
+        return tierRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Tier not found"));
+    }
+
+    @Override
+    public List<VendorTier> getAllTiers() {
+        return tierRepository.findAll();
+    }
+
+    @Override
+    public void deactivateTier(Long id) {
+        VendorTier tier = getTierById(id);
+        tier.setActive(false);
+        tierRepository.save(tier);
+    }
 }

@@ -1,51 +1,52 @@
-package com.example.demo.service;
+package com.example.demo.service.impl;
 
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Service;
-
-import com.example.demo.entity.UserModel;
+import com.example.demo.model.User;
 import com.example.demo.repository.UserRepository;
+import com.example.demo.service.UserService;
+import org.springframework.security.crypto.password.PasswordEncoder;
 
-@Service
 public class UserServiceImpl implements UserService {
 
-@Autowired
-UserRepository userRepository;
+    private final UserRepository userRepository;
+    private final PasswordEncoder passwordEncoder;
 
-@Override
-public UserModel register(String email, String password, String role) {
+    public UserServiceImpl(UserRepository userRepository,
+                           PasswordEncoder passwordEncoder) {
+        this.userRepository = userRepository;
+        this.passwordEncoder = passwordEncoder;
+    }
 
-// email must be unique
-if (userRepository.findByEmail(email) != null) {
-throw new RuntimeException("Email already exists");
-}
+    @Override
+    public User register(String email, String password, String role) {
 
-// role required
-if (role == null || role.isEmpty()) {
-throw new RuntimeException("Role is required");
-}
+        if (userRepository.findByEmail(email).isPresent()) {
+            throw new IllegalArgumentException("Email must be unique");
+        }
 
-UserModel user = new UserModel();
-user.setEmail(email);
-user.setPassword(password);
-user.setRole(role);
+        User user = new User();
+        user.setEmail(email);
+        user.setRole(role);
+        user.setPassword(passwordEncoder.encode(password));
 
-return userRepository.save(user);
-}
+        return userRepository.save(user);
+    }
 
-@Override
-public UserModel login(String email, String password) {
-UserModel user = userRepository.findByEmail(email);
+    @Override
+    public User login(String email, String password) {
 
-if (user == null || !user.getPassword().equals(password)) {
-throw new RuntimeException("Invalid email or password");
-}
+        User user = userRepository.findByEmail(email)
+                .orElseThrow(() -> new RuntimeException("User not found"));
 
-return user;
-}
+        if (!passwordEncoder.matches(password, user.getPassword())) {
+            throw new IllegalArgumentException("Invalid credentials");
+        }
 
-@Override
-public UserModel getByEmail(String email) {
-return userRepository.findByEmail(email);
-}
+        return user;
+    }
+
+    @Override
+    public User getByEmail(String email) {
+        return userRepository.findByEmail(email)
+                .orElseThrow(() -> new RuntimeException("User not found"));
+    }
 }

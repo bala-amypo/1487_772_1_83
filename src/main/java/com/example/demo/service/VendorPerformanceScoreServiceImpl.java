@@ -1,79 +1,67 @@
-package com.example.demo.service;
+package com.example.demo.service.impl;
 
-import java.sql.Timestamp;
+import com.example.demo.model.*;
+import com.example.demo.repository.*;
+import com.example.demo.service.VendorPerformanceScoreService;
+
 import java.util.List;
 
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Service;
+public class VendorPerformanceScoreServiceImpl implements VendorPerformanceScoreService {
 
-import com.example.demo.model.DeliveryEvaluation;
-import com.example.demo.model.Vendor;
-import com.example.demo.model.VendorPerformanceScore;
-import com.example.demo.repository.DeliveryEvaluationRepository;
-import com.example.demo.repository.VendorPerformanceScoreRepository;
+    private final VendorPerformanceScoreRepository scoreRepository;
+    private final DeliveryEvaluationRepository evaluationRepository;
+    private final VendorRepository vendorRepository;
+    private final VendorTierRepository tierRepository;
 
-@Service
-public class VendorPerformanceScoreServiceImpl
-implements VendorPerformanceScoreService {
+    public VendorPerformanceScoreServiceImpl(
+            VendorPerformanceScoreRepository scoreRepository,
+            DeliveryEvaluationRepository evaluationRepository,
+            VendorRepository vendorRepository,
+            VendorTierRepository tierRepository) {
 
-@Autowired
-private VendorPerformanceScoreRepository scoreRepo;
+        this.scoreRepository = scoreRepository;
+        this.evaluationRepository = evaluationRepository;
+        this.vendorRepository = vendorRepository;
+        this.tierRepository = tierRepository;
+    }
 
-@Autowired
-private DeliveryEvaluationRepository evaluationRepo;
+    @Override
+    public VendorPerformanceScore calculateScore(Long vendorId) {
 
-@Override
-public VendorPerformanceScore calculateScore(Long vendorId) {
+        Vendor vendor = vendorRepository.findById(vendorId)
+                .orElseThrow(() -> new RuntimeException("Vendor not found"));
 
-List<DeliveryEvaluation> evaluations =
-evaluationRepo.findByVendorId(vendorId);
+        List<DeliveryEvaluation> evaluations =
+                evaluationRepository.findByVendorId(vendorId);
 
-if (evaluations.isEmpty()) {
-throw new RuntimeException("No evaluations found for vendor");
-}
+        long total = evaluations.size();
 
-int total = evaluations.size();
-int onTimeCount = 0;
-int qualityCount = 0;
+        double onTime = total == 0 ? 0 :
+                (evaluations.stream().filter(DeliveryEvaluation::getMeetsDeliveryTarget).count() * 100.0) / total;
 
-Vendor vendor = evaluations.get(0).getVendor();
+        double quality = total == 0 ? 0 :
+                (evaluations.stream().filter(DeliveryEvaluation::getMeetsQualityTarget).count() * 100.0) / total;
 
-for (DeliveryEvaluation eval : evaluations) {
-if (eval.getMeetsDeliveryTarget()) {
-onTimeCount++;
-}
-if (eval.getMeetsQualityTarget()) {
-qualityCount++;
-}
-}
+        double overall = (onTime + quality) / 2;
 
-double onTimePercentage = (onTimeCount * 100.0) / total;
-double qualityCompliancePercentage = (qualityCount * 100.0) / total;
+        VendorPerformanceScore score = new VendorPerformanceScore();
+        score.setVendor(vendor);
+        score.setOnTimePercentage(onTime);
+        score.setQualityCompliancePercentage(quality);
+        score.setOverallScore(overall);
 
-// predefined weights
-double overallScore =
-(onTimePercentage * 0.5) + (qualityCompliancePercentage * 0.5);
+        return scoreRepository.save(score);
+    }
 
-VendorPerformanceScore score = new VendorPerformanceScore();
-score.setVendor(vendor);
-score.setOnTimePercentage(onTimePercentage);
-score.setQualityCompliancePercentage(qualityCompliancePercentage);
-score.setOverallScore(overallScore);
-score.setCalculatedAt(new Timestamp(System.currentTimeMillis()));
+    @Override
+    public VendorPerformanceScore getLatestScore(Long vendorId) {
+        List<VendorPerformanceScore> scores =
+                scoreRepository.findByVendorOrderByCalculatedAtDesc(vendorId);
+        return scores.isEmpty() ? null : scores.get(0);
+    }
 
-return scoreRepo.save(score);
-}
-
-@Override
-public VendorPerformanceScore getLatestScore(Long vendorId) {
-return scoreRepo.findByVendorIdOrderByCalculatedAtDesc(vendorId)
-.stream()
-.findFirst()
-.orElseThrow(() -> new RuntimeException("No score found"));
-}
-
-@Override
-public List<VendorPerformanceScore> getScoresForVendor(Long vendorId) {
-return scoreRepo.findByVendorIdOrderByCalculatedAtDesc(vendorId);
-}
+    @Override
+    public List<VendorPerformanceScore> getScoresForVendor(Long vendorId) {
+        return scoreRepository.findByVendorOrderByCalculatedAtDesc(vendorId);
+    }
 }

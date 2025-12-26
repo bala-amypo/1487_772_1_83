@@ -1,68 +1,73 @@
-package com.example.demo.service;
+package com.example.demo.service.impl;
 
-import java.util.Date;
+import com.example.demo.model.*;
+import com.example.demo.repository.*;
+import com.example.demo.service.DeliveryEvaluationService;
+
 import java.util.List;
 
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Service;
-
-import com.example.demo.model.DeliveryEvaluation;
-import com.example.demo.model.SLARequirement;
-import com.example.demo.model.Vendor;
-import com.example.demo.repository.DeliveryEvaluationRepository;
-
-@Service
 public class DeliveryEvaluationServiceImpl implements DeliveryEvaluationService {
 
-@Autowired
-private DeliveryEvaluationRepository repo;
+    private final DeliveryEvaluationRepository evaluationRepository;
+    private final VendorRepository vendorRepository;
+    private final SLARequirementRepository slaRepository;
 
-@Override
-public DeliveryEvaluation createEvaluation(DeliveryEvaluation evaluation) {
+    public DeliveryEvaluationServiceImpl(
+            DeliveryEvaluationRepository evaluationRepository,
+            VendorRepository vendorRepository,
+            SLARequirementRepository slaRepository) {
 
-Vendor vendor = evaluation.getVendor();
-SLARequirement sla = evaluation.getSlaRequirement();
+        this.evaluationRepository = evaluationRepository;
+        this.vendorRepository = vendorRepository;
+        this.slaRepository = slaRepository;
+    }
 
-if (!vendor.getActive()) {
-throw new RuntimeException("active vendors only");
-}
+    @Override
+    public DeliveryEvaluation createEvaluation(DeliveryEvaluation evaluation) {
 
-if (evaluation.getActualDeliveryDays() < 0) {
-throw new RuntimeException("Actual delivery days must be >= 0");
-}
+        Vendor vendor = vendorRepository.findById(evaluation.getVendor().getId())
+                .orElseThrow(() -> new RuntimeException("Vendor not found"));
 
-if (evaluation.getQualityScore() < 0 || evaluation.getQualityScore() > 100) {
-throw new RuntimeException("Quality score must be between 0 and 100");
-}
+        if (!vendor.getActive()) {
+            throw new IllegalStateException("Only active vendors are allowed");
+        }
 
-// Calculate delivery target
-boolean deliveryTarget =
-evaluation.getActualDeliveryDays() <= sla.getMaxDeliveryDays();
+        SLARequirement sla = slaRepository.findById(evaluation.getSlaRequirement().getId())
+                .orElseThrow(() -> new RuntimeException("SLA requirement not found"));
 
-// Calculate quality target
-boolean qualityTarget =
-evaluation.getQualityScore() >= sla.getMinQualityScore();
+        if (evaluation.getActualDeliveryDays() < 0) {
+            throw new IllegalArgumentException("actualDeliveryDays must be >= 0");
+        }
 
-evaluation.setMeetsDeliveryTarget(deliveryTarget);
-evaluation.setMeetsQualityTarget(qualityTarget);
-evaluation.setEvaluationDate(new Date());
+        if (evaluation.getQualityScore() < 0 || evaluation.getQualityScore() > 100) {
+            throw new IllegalArgumentException("Quality score must be between 0 and 100");
+        }
 
-return repo.save(evaluation);
-}
+        evaluation.setMeetsDeliveryTarget(
+                evaluation.getActualDeliveryDays() <= sla.getMaxDeliveryDays());
 
-@Override
-public DeliveryEvaluation getEvaluationById(Long id) {
-return repo.findById(id)
-.orElseThrow(() -> new RuntimeException("Evaluation not found"));
-}
+        evaluation.setMeetsQualityTarget(
+                evaluation.getQualityScore() >= sla.getMinQualityScore());
 
-@Override
-public List<DeliveryEvaluation> getEvaluationsForVendor(Long vendorId) {
-return repo.findByVendorId(vendorId);
-}
+        evaluation.setVendor(vendor);
+        evaluation.setSlaRequirement(sla);
 
-@Override
-public List<DeliveryEvaluation> getEvaluationsForRequirement(Long requirementId) {
-return repo.findBySlaRequirementId(requirementId);
-}
+        return evaluationRepository.save(evaluation);
+    }
+
+    @Override
+    public DeliveryEvaluation getEvaluationById(Long id) {
+        return evaluationRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Evaluation not found"));
+    }
+
+    @Override
+    public List<DeliveryEvaluation> getEvaluationsForVendor(Long vendorId) {
+        return evaluationRepository.findByVendorId(vendorId);
+    }
+
+    @Override
+    public List<DeliveryEvaluation> getEvaluationsForRequirement(Long requirementId) {
+        return evaluationRepository.findBySlaRequirementId(requirementId);
+    }
 }
