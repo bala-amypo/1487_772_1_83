@@ -1,29 +1,72 @@
 package com.example.demo.service.impl;
 
-import com.example.demo.model.VendorTier;
-import com.example.demo.repository.VendorTierRepository;
-import com.example.demo.service.VendorTierService;
+import com.example.demo.model.Vendor;
+import com.example.demo.repository.VendorRepository;
+import com.example.demo.service.VendorService;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+import java.util.List;
+import java.util.Optional;
 
-public class VendorTierServiceImpl implements VendorTierService {
-
-    private final VendorTierRepository repo;
-
-    public VendorTierServiceImpl(VendorTierRepository repo) {
-        this.repo = repo;
+@Service
+@Transactional
+public class VendorServiceImpl implements VendorService {
+    
+    private final VendorRepository vendorRepository;
+    
+    public VendorServiceImpl(VendorRepository vendorRepository) {
+        this.vendorRepository = vendorRepository;
     }
-
-    public VendorTier createTier(VendorTier t) {
-        if (t.getMinScoreThreshold() < 0 || t.getMinScoreThreshold() > 100)
-            throw new IllegalArgumentException("Score must be 0–100");
-        if (repo.existsByTierName(t.getTierName()))
-            throw new IllegalArgumentException("Tier name unique");
-
-        return repo.save(t);
+    
+    @Override
+    public Vendor createVendor(Vendor vendor) {
+        if (vendorRepository.existsByName(vendor.getName())) {
+            throw new IllegalArgumentException("Vendor name must be unique: " + vendor.getName());
+        }
+        vendor.setActive(true);
+        return vendorRepository.save(vendor);
     }
-
-    public void deactivateTier(Long id) {
-        VendorTier t = repo.findById(id).orElseThrow();
-        t.setActive(false);
-        repo.save(t);
+    
+    @Override
+    @Transactional(readOnly = true)
+    public Vendor getVendorById(Long id) {
+        Optional<Vendor> vendor = vendorRepository.findById(id);
+        return vendor.orElseThrow(() -> 
+            new IllegalArgumentException("Vendor not found with id: " + id));
+    }
+    
+    @Override
+    @Transactional(readOnly = true)
+    public List<Vendor> getAllVendors() {
+        return vendorRepository.findAll();
+    }
+    
+    @Override
+    public Vendor updateVendor(Long id, Vendor vendorUpdates) {
+        Vendor vendor = getVendorById(id);
+        
+        if (vendorUpdates.getName() != null && !vendorUpdates.getName().equals(vendor.getName())) {
+            if (vendorRepository.existsByName(vendorUpdates.getName())) {
+                throw new IllegalArgumentException("Vendor name must be unique: " + vendorUpdates.getName());
+            }
+            vendor.setName(vendorUpdates.getName());
+        }
+        
+        if (vendorUpdates.getContactEmail() != null) {
+            vendor.setContactEmail(vendorUpdates.getContactEmail());
+        }
+        
+        if (vendorUpdates.getContactPhone() != null) {
+            vendor.setContactPhone(vendorUpdates.getContactPhone());
+        }
+        
+        return vendorRepository.save(vendor);
+    }
+    
+    @Override
+    public void deactivateVendor(Long id) {
+        Vendor vendor = getVendorById(id);
+        vendor.setActive(false);
+        vendorRepository.save(vendor);
     }
 }
