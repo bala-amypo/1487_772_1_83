@@ -1,43 +1,46 @@
 package com.example.demo.controller;
 
-import java.util.List;
-
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.web.bind.annotation.*;
-
 import com.example.demo.model.Vendor;
 import com.example.demo.service.VendorService;
 
+import org.springframework.web.bind.annotation.*;
+import java.util.List;
+import io.swagger.v3.oas.annotations.tags.Tag;
+
 @RestController
+@RequestMapping("/api/vendors")
+@Tag(name = "Vendors")
 public class VendorController {
 
-@Autowired
-VendorService vendorService;
+    private final VendorService vendorService;
 
-@PostMapping("/vendors")
-public Vendor createVendor(@RequestBody Vendor vendor) {
-return vendorService.createVendor(vendor);
-}
+    public VendorController(VendorService vendorService) {
+        this.vendorService = vendorService;
+    }
 
-@PutMapping("/vendors/{id}")
-public Vendor updateVendor(@PathVariable Long id,
-@RequestBody Vendor vendor) {
-return vendorService.updateVendor(id, vendor);
-}
+    @PostMapping
+    public Vendor create(@RequestBody Vendor vendor) {
+        return vendorService.createVendor(vendor);
+    }
 
-@GetMapping("/vendors/{id}")
-public Vendor getVendorById(@PathVariable Long id) {
-return vendorService.getVendorById(id);
-}
+    @PutMapping("/{id}")
+    public Vendor update(@PathVariable Long id,
+                         @RequestBody Vendor vendor) {
+        return vendorService.updateVendor(id, vendor);
+    }
 
-@GetMapping("/vendors")
-public List<Vendor> getAllVendors() {
-return vendorService.getAllVendors();
-}
+    @GetMapping("/{id}")
+    public Vendor get(@PathVariable Long id) {
+        return vendorService.getVendorById(id);
+    }
 
-@PutMapping("/vendors/{id}/deactivate")
-public String deactivateVendor(@PathVariable Long id) {
-vendorService.deactivateVendor(id);
-return "Vendor deactivated successfully";
-}
+    @GetMapping
+    public List<Vendor> list() {
+        return vendorService.getAllVendors();
+    }
+
+    @PutMapping("/{id}/deactivate")
+    public void deactivate(@PathVariable Long id) {
+        vendorService.deactivateVendor(id);
+    }
 }

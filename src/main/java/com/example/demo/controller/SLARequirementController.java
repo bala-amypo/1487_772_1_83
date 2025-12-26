@@ -1,48 +1,46 @@
 package com.example.demo.controller;
 
-import java.util.List;
-
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.web.bind.annotation.*;
-
 import com.example.demo.model.SLARequirement;
 import com.example.demo.service.SLARequirementService;
 
+import org.springframework.web.bind.annotation.*;
+import java.util.List;
+import io.swagger.v3.oas.annotations.tags.Tag;
+
 @RestController
 @RequestMapping("/api/sla-requirements")
+@Tag(name = "SLA Requirements")
 public class SLARequirementController {
 
-@Autowired
-private SLARequirementService service;
+    private final SLARequirementService service;
 
-// POST / - Create SLA requirement
-@PostMapping("/")
-public SLARequirement create(@RequestBody SLARequirement req) {
-return service.createRequirement(req);
-}
+    public SLARequirementController(SLARequirementService service) {
+        this.service = service;
+    }
 
-// PUT /{id} - Update requirement
-@PutMapping("/{id}")
-public SLARequirement update(@PathVariable Long id, @RequestBody SLARequirement req) {
-return service.updateRequirement(id, req);
-}
+    @PostMapping
+    public SLARequirement create(@RequestBody SLARequirement req) {
+        return service.createRequirement(req);
+    }
 
-// GET /{id} - Get requirement
-@GetMapping("/{id}")
-public SLARequirement getById(@PathVariable Long id) {
-return service.getRequirementById(id);
-}
+    @PutMapping("/{id}")
+    public SLARequirement update(@PathVariable Long id,
+                                 @RequestBody SLARequirement req) {
+        return service.updateRequirement(id, req);
+    }
 
-// GET / - List all requirements
-@GetMapping("/")
-public List<SLARequirement> getAll() {
-return service.getAllRequirements();
-}
+    @GetMapping("/{id}")
+    public SLARequirement get(@PathVariable Long id) {
+        return service.getRequirementById(id);
+    }
 
-// PUT /{id}/deactivate - Deactivate requirement
-@PutMapping("/{id}/deactivate")
-public String deactivate(@PathVariable Long id) {
-service.deactivateRequirement(id);
-return "SLA Requirement deactivated successfully";
-}
+    @GetMapping
+    public List<SLARequirement> list() {
+        return service.getAllRequirements();
+    }
+
+    @PutMapping("/{id}/deactivate")
+    public void deactivate(@PathVariable Long id) {
+        service.deactivateRequirement(id);
+    }
 }
