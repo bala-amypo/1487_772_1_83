@@ -1,17 +1,17 @@
 package com.example.demo.service;
 
-import java.util.List;
 import com.example.demo.model.Vendor;
+import java.util.List;
 
 public interface VendorService {
 
-Vendor createVendor(Vendor vendor);
+    Vendor createVendor(Vendor vendor);
 
-Vendor updateVendor(Long id, Vendor vendor);
+    Vendor updateVendor(Long id, Vendor vendor);
 
-Vendor getVendorById(Long id);
+    Vendor getVendorById(Long id);
 
-List<Vendor> getAllVendors();
+    List<Vendor> getAllVendors();
 
-void deactivateVendor(Long id);
+    void deactivateVendor(Long id);
 }

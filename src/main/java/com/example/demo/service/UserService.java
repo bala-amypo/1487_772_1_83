@@ -1,12 +1,12 @@
 package com.example.demo.service;
 
-import com.example.demo.entity.UserModel;
+import com.example.demo.model.User;
 
 public interface UserService {
 
-UserModel register(String email, String password, String role);
+    User register(String email, String password, String role);
 
-UserModel login(String email, String password);
+    User login(String email, String password);
 
-UserModel getByEmail(String email);
+    User getByEmail(String email);
 }

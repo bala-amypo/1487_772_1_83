@@ -1,17 +1,17 @@
 package com.example.demo.service;
 
-import java.util.List;
 import com.example.demo.model.VendorTier;
+import java.util.List;
 
 public interface VendorTierService {
 
-VendorTier createTier(VendorTier tier);
+    VendorTier createTier(VendorTier tier);
 
-VendorTier updateTier(Long id, VendorTier tier);
+    VendorTier updateTier(Long id, VendorTier tier);
 
-VendorTier getTierById(Long id);
+    VendorTier getTierById(Long id);
 
-List<VendorTier> getAllTiers();
+    List<VendorTier> getAllTiers();
 
-VendorTier deactivateTier(Long id);
+    void deactivateTier(Long id);
 }
