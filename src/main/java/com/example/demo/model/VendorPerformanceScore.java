@@ -1,7 +1,7 @@
 package com.example.demo.model;
 
 import jakarta.persistence.*;
-import java.sql.Timestamp;
+import java.time.LocalDateTime;
 
 @Entity
 public class VendorPerformanceScore {
@@ -17,7 +17,22 @@ public class VendorPerformanceScore {
     private Double qualityCompliancePercentage;
     private Double overallScore;
 
-    private Timestamp calculatedAt = new Timestamp(System.currentTimeMillis());
+    private LocalDateTime calculatedAt = LocalDateTime.now();
+
+    public VendorPerformanceScore() {}
+
+    public VendorPerformanceScore(Vendor v, Double onTime, Double quality, Double overall) {
+        this.vendor = v;
+        this.onTimePercentage = onTime;
+        this.qualityCompliancePercentage = quality;
+        this.overallScore = overall;
+    }
 
     // getters & setters
+    public Long getId() { return id; }
+    public Vendor getVendor() { return vendor; }
+    public Double getOnTimePercentage() { return onTimePercentage; }
+    public Double getQualityCompliancePercentage() { return qualityCompliancePercentage; }
+    public Double getOverallScore() { return overallScore; }
+    public LocalDateTime getCalculatedAt() { return calculatedAt; }
 }

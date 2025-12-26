@@ -9,12 +9,25 @@ public class VendorTier {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(unique = true)
     private String tierName;
-
     private Double minScoreThreshold;
     private String description;
     private Boolean active = true;
 
+    public VendorTier() {}
+
+    public VendorTier(String name, Double score, String desc) {
+        this.tierName = name;
+        this.minScoreThreshold = score;
+        this.description = desc;
+    }
+
     // getters & setters
+    public Long getId() { return id; }
+    public void setId(Long id) { this.id = id; }
+
+    public String getTierName() { return tierName; }
+    public Double getMinScoreThreshold() { return minScoreThreshold; }
+    public Boolean getActive() { return active; }
+    public void setActive(Boolean active) { this.active = active; }
 }
