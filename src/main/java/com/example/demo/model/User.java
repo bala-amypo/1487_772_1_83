@@ -3,18 +3,17 @@ package com.example.demo.model;
 import jakarta.persistence.*;
 
 @Entity
-public class VendorTier {
+public class User {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
     @Column(unique = true)
-    private String tierName;
+    private String email;
 
-    private Double minScoreThreshold;
-    private String description;
-    private Boolean active = true;
+    private String password;
+    private String role;
 
     // getters & setters
 }
