@@ -1,46 +1,46 @@
 package com.example.demo.controller;
 
-import java.util.List;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.web.bind.annotation.*;
-
 import com.example.demo.model.VendorTier;
 import com.example.demo.service.VendorTierService;
 
+import org.springframework.web.bind.annotation.*;
+import java.util.List;
+import io.swagger.v3.oas.annotations.tags.Tag;
+
 @RestController
 @RequestMapping("/api/tiers")
+@Tag(name = "Vendor Tiers")
 public class VendorTierController {
 
-@Autowired
-VendorTierService vendorTierService;
+    private final VendorTierService service;
 
-// POST - Create Tier
-@PostMapping
-public VendorTier createTier(@RequestBody VendorTier tier) {
-return vendorTierService.createTier(tier);
-}
+    public VendorTierController(VendorTierService service) {
+        this.service = service;
+    }
 
-// PUT - Update Tier
-@PutMapping("/{id}")
-public VendorTier updateTier(@PathVariable Long id, @RequestBody VendorTier tier) {
-return vendorTierService.updateTier(id, tier);
-}
+    @PostMapping
+    public VendorTier create(@RequestBody VendorTier tier) {
+        return service.createTier(tier);
+    }
 
-// GET - Get Tier by ID
-@GetMapping("/{id}")
-public VendorTier getTierById(@PathVariable Long id) {
-return vendorTierService.getTierById(id);
-}
+    @PutMapping("/{id}")
+    public VendorTier update(@PathVariable Long id,
+                             @RequestBody VendorTier tier) {
+        return service.updateTier(id, tier);
+    }
 
-// GET - List all tiers
-@GetMapping
-public List<VendorTier> getAllTiers() {
-return vendorTierService.getAllTiers();
-}
+    @GetMapping("/{id}")
+    public VendorTier get(@PathVariable Long id) {
+        return service.getTierById(id);
+    }
 
-// PUT - Deactivate Tier
-@PutMapping("/{id}/deactivate")
-public VendorTier deactivateTier(@PathVariable Long id) {
-return vendorTierService.deactivateTier(id);
-}
+    @GetMapping
+    public List<VendorTier> list() {
+        return service.getAllTiers();
+    }
+
+    @PutMapping("/{id}/deactivate")
+    public void deactivate(@PathVariable Long id) {
+        service.deactivateTier(id);
+    }
 }

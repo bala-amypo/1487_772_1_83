@@ -1,35 +1,35 @@
 package com.example.demo.controller;
 
-import java.util.List;
-
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.web.bind.annotation.*;
-
 import com.example.demo.model.VendorPerformanceScore;
 import com.example.demo.service.VendorPerformanceScoreService;
 
+import org.springframework.web.bind.annotation.*;
+import java.util.List;
+import io.swagger.v3.oas.annotations.tags.Tag;
+
 @RestController
 @RequestMapping("/api/scores")
+@Tag(name = "Vendor Performance Scores")
 public class VendorPerformanceScoreController {
 
-@Autowired
-private VendorPerformanceScoreService service;
+    private final VendorPerformanceScoreService service;
 
-// POST /calculate/{vendorid}
-@PostMapping("/calculate/{vendorid}")
-public VendorPerformanceScore calculate(@PathVariable Long vendorid) {
-return service.calculateScore(vendorid);
-}
+    public VendorPerformanceScoreController(VendorPerformanceScoreService service) {
+        this.service = service;
+    }
 
-// GET /latest/{vendorid}
-@GetMapping("/latest/{vendorid}")
-public VendorPerformanceScore getLatest(@PathVariable Long vendorid) {
-return service.getLatestScore(vendorid);
-}
+    @PostMapping("/calculate/{vendorId}")
+    public VendorPerformanceScore calculate(@PathVariable Long vendorId) {
+        return service.calculateScore(vendorId);
+    }
 
-// GET /vendor/{vendorid}
-@GetMapping("/vendor/{vendorid}")
-public List<VendorPerformanceScore> getHistory(@PathVariable Long vendorid) {
-return service.getScoresForVendor(vendorid);
-}
+    @GetMapping("/latest/{vendorId}")
+    public VendorPerformanceScore latest(@PathVariable Long vendorId) {
+        return service.getLatestScore(vendorId);
+    }
+
+    @GetMapping("/vendor/{vendorId}")
+    public List<VendorPerformanceScore> history(@PathVariable Long vendorId) {
+        return service.getScoresForVendor(vendorId);
+    }
 }
